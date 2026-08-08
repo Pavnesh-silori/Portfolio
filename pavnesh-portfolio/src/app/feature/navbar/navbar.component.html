@@ -10,15 +10,17 @@
 
         @for(item of navItems; track item.id){
 
-        <li>
+            <li>
 
-            <a (click)="scrollTo(item.id)">
+                <a
+                    (click)="scrollTo(item.id)"
+                    [class.active]="activeSection === item.id">
 
-                {{item.label}}
+                    {{item.label}}
 
-            </a>
+                </a>
 
-        </li>
+            </li>
 
         }
 

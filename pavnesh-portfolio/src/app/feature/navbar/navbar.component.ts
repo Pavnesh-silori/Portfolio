@@ -1,5 +1,5 @@
-import { Component, HostListener, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, HostListener, signal } from '@angular/core';
 
 @Component({
   selector: 'app-navbar',
@@ -12,7 +12,7 @@ export class NavbarComponent {
 
   isScrolled = signal(false);
 
-  isMenuOpen = signal(false);
+  activeSection = 'hero';
 
   navItems = [
     { label: 'Home', id: 'hero' },
@@ -28,21 +28,14 @@ export class NavbarComponent {
     this.isScrolled.set(window.scrollY > 40);
   }
 
-  toggleMenu() {
-    this.isMenuOpen.update(value => !value);
-  }
-
   scrollTo(id: string) {
 
-    const element = document.getElementById(id);
+    this.activeSection = id;
 
-    if (element) {
-      element.scrollIntoView({
-        behavior: 'smooth'
-      });
-    }
+    document.getElementById(id)?.scrollIntoView({
+      behavior: 'smooth'
+    });
 
-    this.isMenuOpen.set(false);
   }
 
 }

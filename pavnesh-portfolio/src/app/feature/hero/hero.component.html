@@ -1,0 +1,119 @@
+<section class="hero">
+
+    <!-- ================= LEFT ================= -->
+
+    <div class="hero-left">
+
+        <p class="hero-greeting">
+
+            {{ hero.greeting }}
+
+        </p>
+
+        <h1 class="hero-title">
+
+            {{ hero.firstName }}
+
+            <span>
+
+                {{ hero.lastName }}
+
+            </span>
+
+        </h1>
+
+        <h2 class="hero-role">
+
+            Full Stack Developer
+
+        </h2>
+
+        <p class="hero-description">
+
+            {{ hero.description }}
+
+        </p>
+
+        <!-- Technology Chips -->
+
+        <div class="tech-stack">
+
+            @for (tech of hero.technologies; track tech.name) {
+
+                <div class="tech-chip">
+
+                    <img
+                        [src]="tech.icon"
+                        [alt]="tech.name">
+
+                    <span>
+
+                        {{ tech.name }}
+
+                    </span>
+
+                </div>
+
+            }
+
+        </div>
+
+        <!-- Buttons -->
+
+        <div class="hero-buttons">
+
+            <button class="primary-btn">
+
+                Download Resume
+
+            </button>
+
+            <button class="secondary-btn">
+
+                View Projects
+
+            </button>
+
+        </div>
+
+        <!-- Social Links -->
+
+        <div class="social-links">
+
+            <a href="#" target="_blank">
+
+                GitHub
+
+            </a>
+
+            <a href="#" target="_blank">
+
+                LinkedIn
+
+            </a>
+
+            <a href="#" target="_blank">
+
+                LeetCode
+
+            </a>
+
+            <a href="mailto:">
+
+                Email
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- ================= RIGHT ================= -->
+
+    <div class="hero-right">
+
+        <app-workspace></app-workspace>
+
+    </div>
+
+</section>

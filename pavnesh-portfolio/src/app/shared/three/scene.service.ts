@@ -13,14 +13,31 @@ import { SocketService } from '../services/socket.service';
 import { DrawerService } from '../services/drawer.service';
 import { TablelampService } from '../services/tablelamp.service';
 import { KeyboardMouseService } from '../services/keyboard-mouse.service';
+import { ChairService } from '../services/chair.service';
+import { DeveloperService } from '../services/developer.service';
 @Injectable({
-    providedIn: 'root'
-})export class SceneService {
+  providedIn: 'root'
+}) export class SceneService {
 
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
   private world!: THREE.Group;
+
+
+  private raycaster = new THREE.Raycaster();
+
+  private mouse = new THREE.Vector2();
+
+  private developer?: THREE.Group;
+
+  private chair?: THREE.Group;
+
+  private cameraTarget = new THREE.Vector3();
+
+  private cameraLookTarget = new THREE.Vector3();
+
+  private isDeveloperFocused = false;
 
   constructor(
     private deskService: DeskService,
@@ -30,19 +47,28 @@ import { KeyboardMouseService } from '../services/keyboard-mouse.service';
     private cameraService: CameraService,
     private laptopService: LaptopService,
     private carService: CarService,
-    private plantService:PlantService,
-    private socketService:SocketService,
-    private drawerService:DrawerService,
-    private tablelampService:TablelampService,
-    private keyboardMouseService: KeyboardMouseService
-  ) {}
-init(canvas: HTMLCanvasElement): void {
+    private plantService: PlantService,
+    private socketService: SocketService,
+    private drawerService: DrawerService,
+    private tablelampService: TablelampService,
+    private keyboardMouseService: KeyboardMouseService,
+    private chairService: ChairService,
+    private developerService: DeveloperService
+  ) { }
+
+  init(canvas: HTMLCanvasElement): void {
 
     this.createScene();
 
     this.camera = this.cameraService.createCamera(canvas);
 
     this.createRenderer(canvas);
+
+    this.renderer.domElement.addEventListener(
+      'click',
+      (event) => this.onDeveloperClick(event)
+    );
+
 
     this.lightsService.createLights(this.scene);
 
@@ -58,10 +84,10 @@ init(canvas: HTMLCanvasElement): void {
     // Displays
     this.monitorService.createMonitor(desk, 'left');
     this.monitorService.createMonitor(desk, 'right');
-
     this.laptopService.createLaptop(desk);
-
     this.keyboardMouseService.createKeyboardAndMouse(desk);
+    this.chair = this.chairService.createChair(this.world);
+    this.developer = this.developerService.createDeveloper(this.world);
     // Decorations
     this.carService.createCars(desk);
 
@@ -71,7 +97,7 @@ init(canvas: HTMLCanvasElement): void {
 
     this.animate();
 
-}
+  }
   private createScene(): void {
 
     this.scene = new THREE.Scene();
@@ -102,11 +128,152 @@ init(canvas: HTMLCanvasElement): void {
 
     const time = Date.now() * 0.0005;
 
-    this.world.rotation.y = time * 0.5;
-    this.world.position.y = Math.sin(time * 2) * 0.08;
+    // =====================================================
+    // Platform floating
+    // =====================================================
 
-    this.renderer.render(this.scene, this.camera);
+    this.world.position.y =
+      Math.sin(time * 2) * 0.08;
 
+
+    // =====================================================
+    // Developer Camera Focus
+    // =====================================================
+
+    if (this.isDeveloperFocused) {
+
+      // Smooth camera movement
+
+      this.camera.position.lerp(
+        this.cameraTarget,
+        0.05
+      );
+
+
+      // Smoothly look toward developer
+
+      this.cameraLookTarget.lerp(
+        this.developer
+          ? new THREE.Vector3(
+            this.developer.position.x,
+            this.developer.position.y + 1.2,
+            this.developer.position.z
+          )
+          : this.cameraLookTarget,
+        0.05
+      );
+
+      this.camera.lookAt(
+        this.cameraLookTarget
+      );
+    }
+
+
+    // =====================================================
+    // Render
+    // =====================================================
+
+    this.renderer.render(
+      this.scene,
+      this.camera
+    );
   };
 
+
+  private onDeveloperClick(
+    event: MouseEvent
+  ): void {
+
+    // =====================================================
+    // Mouse position → Normalized Device Coordinates
+    // =====================================================
+
+    const rect =
+      this.renderer.domElement.getBoundingClientRect();
+
+    this.mouse.x =
+      (
+        (event.clientX - rect.left) /
+        rect.width
+      ) * 2 - 1;
+
+    this.mouse.y =
+      -(
+        (event.clientY - rect.top) /
+        rect.height
+      ) * 2 + 1;
+
+
+    // =====================================================
+    // Raycast
+    // =====================================================
+
+    this.raycaster.setFromCamera(
+      this.mouse,
+      this.camera
+    );
+
+
+    // =====================================================
+    // Check Developer
+    // =====================================================
+
+    if (!this.developer) {
+      return;
+    }
+
+    const intersections =
+      this.raycaster.intersectObject(
+        this.developer,
+        true
+      );
+
+
+    // =====================================================
+    // Developer Clicked
+    // =====================================================
+
+    if (intersections.length > 0) {
+
+      console.log(
+        'Developer clicked'
+      );
+
+      this.focusDeveloper();
+
+      this.developerService.standDeveloper();
+    }
+  }
+
+  private focusDeveloper(): void {
+
+    if (!this.developer) {
+      return;
+    }
+
+    // ================================================
+    // Camera position
+    // ================================================
+
+    console.log("inside dev focus function")
+    this.cameraTarget.set(
+      this.developer.position.x + 2.8,
+      this.developer.position.y + 2.5,
+      this.developer.position.z + 3.0
+    );
+
+
+    // ================================================
+    // Where the camera should look
+    // ================================================
+
+    this.cameraLookTarget.set(
+      this.developer.position.x,
+      this.developer.position.y + 1.2,
+      this.developer.position.z
+    );
+
+
+    this.isDeveloperFocused = true;
+  }
 }
